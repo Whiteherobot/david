@@ -217,7 +217,10 @@ function renderMovies(movies) {
             movie.expand.genres.slice(0, 3).map(g => `<span class="tag">${g.name}</span>`).join('') : '';
         
         const posterUrl = movie.video_file ? 
-            pb.files.getUrl(movie, movie.video_file, {'thumb': '300x450'}) : '';
+            pb.files.getUrl(movie, movie.video_file, {
+                'thumb': '300x450',
+                'ngrok-skip-browser-warning': 'true'
+            }) : '';
         
         return `
         <div class="content-card" onclick="showMovieDetail('${movie.id}')">
@@ -277,7 +280,10 @@ function renderSeries(series) {
             serie.expand.genres.slice(0, 3).map(g => `<span class="tag">${g.name}</span>`).join('') : '';
         
         const posterUrl = serie.video_file ? 
-            pb.files.getUrl(serie, serie.video_file, {'thumb': '300x450'}) : '';
+            pb.files.getUrl(serie, serie.video_file, {
+                'thumb': '300x450',
+                'ngrok-skip-browser-warning': 'true'
+            }) : '';
         
         return `
         <div class="content-card" onclick="showSerieDetail('${serie.id}')">
@@ -419,7 +425,10 @@ async function showMovieDetail(id) {
         const detailContent = document.getElementById('detailContent');
         
         const posterUrl = movie.video_file ? 
-            pb.files.getUrl(movie, movie.video_file, {'thumb': '500x750'}) : '';
+            pb.files.getUrl(movie, movie.video_file, {
+                'thumb': '500x750',
+                'ngrok-skip-browser-warning': 'true'
+            }) : '';
         
         detailContent.innerHTML = `
             <div class="detail-header">
@@ -474,7 +483,10 @@ async function showSerieDetail(id) {
         const detailContent = document.getElementById('detailContent');
         
         const posterUrl = serie.video_file ? 
-            pb.files.getUrl(serie, serie.video_file, {'thumb': '500x750'}) : '';
+            pb.files.getUrl(serie, serie.video_file, {
+                'thumb': '500x750',
+                'ngrok-skip-browser-warning': 'true'
+            }) : '';
         
         detailContent.innerHTML = `
             <div class="detail-header">
