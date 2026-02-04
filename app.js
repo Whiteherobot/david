@@ -1,6 +1,13 @@
 // PocketBase Configuration
 const pb = new PocketBase('https://trifid-kerry-nonunitable.ngrok-free.dev/');
 
+// Configurar encabezado para omitir la página de advertencia de ngrok
+pb.beforeSend = function (url, options) {
+    options.headers = options.headers || {};
+    options.headers['ngrok-skip-browser-warning'] = 'true';
+    return { url, options };
+};
+
 // Admin password (cambiar en produccion)
 const ADMIN_PASSWORD = 'admin123';
 
@@ -209,13 +216,19 @@ function renderMovies(movies) {
         const genres = movie.expand && movie.expand.genres ? 
             movie.expand.genres.slice(0, 3).map(g => `<span class="tag">${g.name}</span>`).join('') : '';
         
+        const posterUrl = movie.video_file ? 
+            pb.files.getUrl(movie, movie.video_file, {'thumb': '300x450'}) : '';
+        
         return `
         <div class="content-card" onclick="showMovieDetail('${movie.id}')">
             <div class="card-image">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                    <polyline points="17 2 12 7 7 2"></polyline>
-                </svg>
+                ${posterUrl ? 
+                    `<img src="${posterUrl}" alt="${movie.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                        <polyline points="17 2 12 7 7 2"></polyline>
+                    </svg>`
+                }
             </div>
             <div class="card-content">
                 <h3 class="card-title">${movie.name || 'Sin título'}</h3>
@@ -263,13 +276,19 @@ function renderSeries(series) {
         const genres = serie.expand && serie.expand.genres ? 
             serie.expand.genres.slice(0, 3).map(g => `<span class="tag">${g.name}</span>`).join('') : '';
         
+        const posterUrl = serie.video_file ? 
+            pb.files.getUrl(serie, serie.video_file, {'thumb': '300x450'}) : '';
+        
         return `
         <div class="content-card" onclick="showSerieDetail('${serie.id}')">
             <div class="card-image">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                </svg>
+                ${posterUrl ? 
+                    `<img src="${posterUrl}" alt="${serie.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>`
+                }
             </div>
             <div class="card-content">
                 <h3 class="card-title">${serie.name || 'Sin título'}</h3>
@@ -399,14 +418,20 @@ async function showMovieDetail(id) {
         });
         const detailContent = document.getElementById('detailContent');
         
+        const posterUrl = movie.video_file ? 
+            pb.files.getUrl(movie, movie.video_file, {'thumb': '500x750'}) : '';
+        
         detailContent.innerHTML = `
             <div class="detail-header">
                 <div class="detail-poster">
                     <div class="card-image" style="height: 100%;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                            <polyline points="17 2 12 7 7 2"></polyline>
-                        </svg>
+                        ${posterUrl ? 
+                            `<img src="${posterUrl}" alt="${movie.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">` :
+                            `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                                <polyline points="17 2 12 7 7 2"></polyline>
+                            </svg>`
+                        }
                     </div>
                 </div>
                 <div class="detail-info">
@@ -418,9 +443,17 @@ async function showMovieDetail(id) {
                     <div class="detail-stats">
                         <div class="stat">
                             <span class="stat-label">Descargas</span>
-                            <span class="stat-value">${movie.downloads || 0}</span>
+                            <span class="stat-value" id="movieDownloadCount">${movie.downloads || 0}</span>
                         </div>
                     </div>
+                    <button class="btn-download" onclick="handleDownload('Movies', '${movie.id}')" style="margin-top: 20px; padding: 12px 24px; background: var(--gradient-accent); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; font-size: 16px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Descargar
+                    </button>
                 </div>
             </div>
         `;
@@ -440,14 +473,20 @@ async function showSerieDetail(id) {
         });
         const detailContent = document.getElementById('detailContent');
         
+        const posterUrl = serie.video_file ? 
+            pb.files.getUrl(serie, serie.video_file, {'thumb': '500x750'}) : '';
+        
         detailContent.innerHTML = `
             <div class="detail-header">
                 <div class="detail-poster">
                     <div class="card-image" style="height: 100%;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                        </svg>
+                        ${posterUrl ? 
+                            `<img src="${posterUrl}" alt="${serie.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">` :
+                            `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                            </svg>`
+                        }
                     </div>
                 </div>
                 <div class="detail-info">
@@ -460,9 +499,17 @@ async function showSerieDetail(id) {
                     <div class="detail-stats">
                         <div class="stat">
                             <span class="stat-label">Descargas</span>
-                            <span class="stat-value">${serie.downloads || 0}</span>
+                            <span class="stat-value" id="serieDownloadCount">${serie.downloads || 0}</span>
                         </div>
                     </div>
+                    <button class="btn-download" onclick="handleDownload('Series', '${serie.id}')" style="margin-top: 20px; padding: 12px 24px; background: var(--gradient-accent); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; font-size: 16px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Descargar
+                    </button>
                 </div>
             </div>
         `;
@@ -586,6 +633,40 @@ async function handleActorSubmit(e) {
     } catch (error) {
         console.error('Error creating actor:', error);
         alert('Error al agregar el actor: ' + error.message);
+    }
+}
+
+// Handle Download
+async function handleDownload(collectionName, id) {
+    try {
+        // Obtener el registro actual
+        const record = await pb.collection(collectionName).getOne(id);
+        
+        // Incrementar las descargas
+        const newDownloads = (record.downloads || 0) + 1;
+        
+        // Actualizar en la base de datos
+        await pb.collection(collectionName).update(id, {
+            downloads: newDownloads
+        });
+        
+        // Actualizar el contador en el modal
+        const countElement = document.getElementById(collectionName === 'Movies' ? 'movieDownloadCount' : 'serieDownloadCount');
+        if (countElement) {
+            countElement.textContent = newDownloads;
+        }
+        
+        // Recargar los datos para reflejar el cambio en las tarjetas
+        if (collectionName === 'Movies') {
+            await loadMovies();
+        } else {
+            await loadSeries();
+        }
+        
+        console.log(`Download count updated: ${newDownloads}`);
+    } catch (error) {
+        console.error('Error updating download count:', error);
+        alert('Error al registrar la descarga');
     }
 }
 
