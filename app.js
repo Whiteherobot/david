@@ -8,6 +8,26 @@ pb.beforeSend = function (url, options) {
     return { url, options };
 };
 
+// Function to load image with custom headers
+async function loadImageWithHeaders(url) {
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'ngrok-skip-browser-warning': 'true'
+            }
+        });
+        if (!response.ok) {
+            console.error('Image fetch failed:', response.status, response.statusText);
+            return null;
+        }
+        const blob = await response.blob();
+        return URL.createObjectURL(blob);
+    } catch (error) {
+        console.error('Error loading image:', error);
+        return null;
+    }
+}
+
 // Admin password (cambiar en produccion)
 const ADMIN_PASSWORD = 'admin123';
 
@@ -212,26 +232,19 @@ function renderMovies(movies) {
         return;
     }
 
-    moviesGrid.innerHTML = movies.map(movie => {
+    moviesGrid.innerHTML = movies.map((movie, index) => {
         const genres = movie.expand && movie.expand.genres ? 
             movie.expand.genres.slice(0, 3).map(g => `<span class="tag">${g.name}</span>`).join('') : '';
         
-        const posterUrl = movie.video_file ? 
-            pb.files.getUrl(movie, movie.video_file, {
-                'thumb': '300x450',
-                'ngrok-skip-browser-warning': 'true'
-            }) : '';
+        const cardId = `movie-card-${index}`;
         
         return `
         <div class="content-card" onclick="showMovieDetail('${movie.id}')">
-            <div class="card-image">
-                ${posterUrl ? 
-                    `<img src="${posterUrl}" alt="${movie.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
-                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                        <polyline points="17 2 12 7 7 2"></polyline>
-                    </svg>`
-                }
+            <div class="card-image" id="${cardId}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                    <polyline points="17 2 12 7 7 2"></polyline>
+                </svg>
             </div>
             <div class="card-content">
                 <h3 class="card-title">${movie.name || 'Sin título'}</h3>
@@ -259,6 +272,19 @@ function renderMovies(movies) {
         </div>
         `;
     }).join('');
+    
+    // Load images after rendering
+    movies.forEach(async (movie, index) => {
+        if (movie.video_file) {
+            const url = pb.files.getUrl(movie, movie.video_file, { thumb: '300x450' });
+            const imageUrl = await loadImageWithHeaders(url);
+            const cardElement = document.getElementById(`movie-card-${index}`);
+            if (imageUrl && cardElement) {
+                cardElement.innerHTML = `<img src="${imageUrl}" alt="${movie.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            }
+        }
+    });
+    
     console.log('Movies rendered successfully');
 }
 
@@ -275,26 +301,19 @@ function renderSeries(series) {
         return;
     }
 
-    seriesGrid.innerHTML = series.map(serie => {
+    seriesGrid.innerHTML = series.map((serie, index) => {
         const genres = serie.expand && serie.expand.genres ? 
             serie.expand.genres.slice(0, 3).map(g => `<span class="tag">${g.name}</span>`).join('') : '';
         
-        const posterUrl = serie.video_file ? 
-            pb.files.getUrl(serie, serie.video_file, {
-                'thumb': '300x450',
-                'ngrok-skip-browser-warning': 'true'
-            }) : '';
+        const cardId = `serie-card-${index}`;
         
         return `
         <div class="content-card" onclick="showSerieDetail('${serie.id}')">
-            <div class="card-image">
-                ${posterUrl ? 
-                    `<img src="${posterUrl}" alt="${serie.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
-                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                    </svg>`
-                }
+            <div class="card-image" id="${cardId}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
             </div>
             <div class="card-content">
                 <h3 class="card-title">${serie.name || 'Sin título'}</h3>
@@ -321,6 +340,19 @@ function renderSeries(series) {
         </div>
         `;
     }).join('');
+    
+    // Load images after rendering
+    series.forEach(async (serie, index) => {
+        if (serie.video_file) {
+            const url = pb.files.getUrl(serie, serie.video_file, { thumb: '300x450' });
+            const imageUrl = await loadImageWithHeaders(url);
+            const cardElement = document.getElementById(`serie-card-${index}`);
+            if (imageUrl && cardElement) {
+                cardElement.innerHTML = `<img src="${imageUrl}" alt="${serie.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            }
+        }
+    });
+    
     console.log('Series rendered successfully');
 }
 
@@ -424,11 +456,11 @@ async function showMovieDetail(id) {
         });
         const detailContent = document.getElementById('detailContent');
         
-        const posterUrl = movie.video_file ? 
-            pb.files.getUrl(movie, movie.video_file, {
-                'thumb': '500x750',
-                'ngrok-skip-browser-warning': 'true'
-            }) : '';
+        let posterUrl = '';
+        if (movie.video_file) {
+            posterUrl = pb.files.getUrl(movie, movie.video_file, { thumb: '500x750' });
+            posterUrl += '&ngrok-skip-browser-warning=true';
+        }
         
         detailContent.innerHTML = `
             <div class="detail-header">
@@ -482,11 +514,11 @@ async function showSerieDetail(id) {
         });
         const detailContent = document.getElementById('detailContent');
         
-        const posterUrl = serie.video_file ? 
-            pb.files.getUrl(serie, serie.video_file, {
-                'thumb': '500x750',
-                'ngrok-skip-browser-warning': 'true'
-            }) : '';
+        let posterUrl = '';
+        if (serie.video_file) {
+            posterUrl = pb.files.getUrl(serie, serie.video_file, { thumb: '500x750' });
+            posterUrl += '&ngrok-skip-browser-warning=true';
+        }
         
         detailContent.innerHTML = `
             <div class="detail-header">
