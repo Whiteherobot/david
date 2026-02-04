@@ -456,23 +456,14 @@ async function showMovieDetail(id) {
         });
         const detailContent = document.getElementById('detailContent');
         
-        let posterUrl = '';
-        if (movie.video_file) {
-            posterUrl = pb.files.getUrl(movie, movie.video_file, { thumb: '500x750' });
-            posterUrl += '&ngrok-skip-browser-warning=true';
-        }
-        
         detailContent.innerHTML = `
             <div class="detail-header">
                 <div class="detail-poster">
-                    <div class="card-image" style="height: 100%;">
-                        ${posterUrl ? 
-                            `<img src="${posterUrl}" alt="${movie.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">` :
-                            `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                                <polyline points="17 2 12 7 7 2"></polyline>
-                            </svg>`
-                        }
+                    <div class="card-image" id="movie-detail-image" style="height: 100%;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                            <polyline points="17 2 12 7 7 2"></polyline>
+                        </svg>
                     </div>
                 </div>
                 <div class="detail-info">
@@ -499,6 +490,16 @@ async function showMovieDetail(id) {
             </div>
         `;
         
+        // Load image with headers
+        if (movie.video_file) {
+            const url = pb.files.getUrl(movie, movie.video_file, { thumb: '500x750' });
+            const imageUrl = await loadImageWithHeaders(url);
+            const imageElement = document.getElementById('movie-detail-image');
+            if (imageUrl && imageElement) {
+                imageElement.innerHTML = `<img src="${imageUrl}" alt="${movie.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+            }
+        }
+        
         detailModal.classList.add('active');
     } catch (error) {
         console.error('Error loading movie details:', error);
@@ -514,23 +515,14 @@ async function showSerieDetail(id) {
         });
         const detailContent = document.getElementById('detailContent');
         
-        let posterUrl = '';
-        if (serie.video_file) {
-            posterUrl = pb.files.getUrl(serie, serie.video_file, { thumb: '500x750' });
-            posterUrl += '&ngrok-skip-browser-warning=true';
-        }
-        
         detailContent.innerHTML = `
             <div class="detail-header">
                 <div class="detail-poster">
-                    <div class="card-image" style="height: 100%;">
-                        ${posterUrl ? 
-                            `<img src="${posterUrl}" alt="${serie.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">` :
-                            `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                            </svg>`
-                        }
+                    <div class="card-image" id="serie-detail-image" style="height: 100%;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                        </svg>
                     </div>
                 </div>
                 <div class="detail-info">
@@ -557,6 +549,16 @@ async function showSerieDetail(id) {
                 </div>
             </div>
         `;
+        
+        // Load image with headers
+        if (serie.video_file) {
+            const url = pb.files.getUrl(serie, serie.video_file, { thumb: '500x750' });
+            const imageUrl = await loadImageWithHeaders(url);
+            const imageElement = document.getElementById('serie-detail-image');
+            if (imageUrl && imageElement) {
+                imageElement.innerHTML = `<img src="${imageUrl}" alt="${serie.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+            }
+        }
         
         detailModal.classList.add('active');
     } catch (error) {
